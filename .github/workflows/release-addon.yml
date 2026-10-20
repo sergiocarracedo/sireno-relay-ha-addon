@@ -1,0 +1,40 @@
+name: Release add-on
+
+on:
+  push:
+    branches: [main]
+    paths: [sirenorelay/**]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: addon-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Bump add-on version and create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          today="$(date -u +'%Y.%-m.%-d')"
+          current="$(sed -n -E 's/^version: "([^"]+)"$/\1/p' sirenorelay/config.yaml)"
+          revision=1
+          if [[ "$current" =~ ^${today//./\.}-([0-9]+)$ ]]; then revision=$((BASH_REMATCH[1] + 1)); fi
+          version="${today}-${revision}"
+          sed -i -E "s/^version: .*/version: \"${version}\"/" sirenorelay/config.yaml
+          { printf '# Changelog\n\n## %s\n\n- Publish add-on changes.\n\n' "$version"; test -f CHANGELOG.md && sed '1,3d' CHANGELOG.md || true; } > /tmp/CHANGELOG.md
+          mv /tmp/CHANGELOG.md CHANGELOG.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md sirenorelay/config.yaml
+          git commit -m "chore: release ${version}"
+          git push origin HEAD:main
+          gh release create "v${version}" --title "SirenoRELAY add-on ${version}" --notes "Publishes the SirenoRELAY Home Assistant add-on."

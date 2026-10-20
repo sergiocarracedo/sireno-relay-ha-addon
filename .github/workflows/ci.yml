@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate add-on configuration
+        run: ruby -ryaml -e 'Dir["**/*.{yml,yaml}"].each { |path| YAML.load_file(path) }'
+      - name: Check shell syntax
+        run: bash -n sirenorelay/addon-run.sh sirenorelay/sirenorelay-terminal.sh tests/smoke.sh .github/scripts/bump-sirenorelay.sh
