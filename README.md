@@ -7,9 +7,9 @@ Run [SirenoRELAY](https://github.com/sergiocarracedo/sireno-relay) as a Home Ass
 1. Open **Settings → Add-ons → Add-on Store** in Home Assistant.
 2. Add `https://github.com/sergiocarracedo/sireno-relay-ha-addon` under **Repositories**.
 3. Install **SirenoRELAY** and start it.
-4. Select **Open Web UI** and open the terminal.
-5. Run `sirenorelay onboard` and complete the interactive IMAP/SMTP setup.
-6. Run `cat ~/.config/sirenorelay/config.yml`, then paste that YAML into the add-on’s **Configuration** tab and save.
+4. Select **Open Web UI**, then choose **Run first-time setup**.
+5. Complete the interactive IMAP/SMTP setup. Its generated YAML is automatically copied into the add-on’s **Configuration** tab.
+6. Use that tab’s `config_yaml` editor for all later configuration changes.
 
 The Configuration tab is authoritative after this import. It persists the YAML at `/data/sirenorelay/.config/sirenorelay/config.yml`; onboarding secrets live beside it in `/data/sirenorelay/.config/sirenorelay/secrets/`. Home Assistant includes `/data` in add-on backups. Audit logs are intentionally not retained in that backed-up directory.
 

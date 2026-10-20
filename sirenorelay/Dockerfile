@@ -33,9 +33,9 @@ RUN apt-get update \
     && sirenorelay version \
     && himalaya --version
 
-COPY addon-run.sh config-sync.py sirenorelay-terminal.sh /usr/local/bin/
+COPY addon-run.sh config-sync.py sirenorelay-terminal.sh sirenorelay-onboard.sh /usr/local/bin/
 COPY ingress.conf /etc/nginx/sirenorelay-ingress.conf
-RUN chmod +x /usr/local/bin/addon-run.sh /usr/local/bin/sirenorelay-terminal.sh
+RUN chmod +x /usr/local/bin/addon-run.sh /usr/local/bin/sirenorelay-terminal.sh /usr/local/bin/sirenorelay-onboard.sh
 
 LABEL io.hass.version="${BUILD_VERSION}" \
       io.hass.type="addon" \

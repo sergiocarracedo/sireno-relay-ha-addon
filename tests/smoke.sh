@@ -18,6 +18,7 @@ done
 docker exec "$name" sh -c 'test "$(id -u sirenorelay)" = 10001 && command -v sirenorelay && command -v himalaya && command -v socat && command -v ttyd'
 docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8099/ -o /tmp/ingress.html && grep -Fq "Open terminal" /tmp/ingress.html'
 docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8099/terminal/ -o /tmp/terminal.html && grep -Fq ttyd /tmp/terminal.html'
+docker exec "$name" sh -c 'grep -Fq "Run first-time setup" /tmp/ingress.html && curl -fsS http://127.0.0.1:8099/onboard/ -o /tmp/onboard.html && grep -Fq ttyd /tmp/onboard.html'
 docker exec "$name" sh -c '! ss -ltn | grep -q ":8443"'
 
 cat <<'EOF' | docker exec -i "$name" python3 -c 'import json, sys; open("/data/options.json", "w").write(json.dumps({"config_yaml": sys.stdin.read()}))'

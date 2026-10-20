@@ -31,6 +31,8 @@ bridge_pid=$!
 
 ttyd -W -i 127.0.0.1 -p 7681 -b /terminal /usr/local/bin/sirenorelay-terminal.sh &
 terminal_pid=$!
+ttyd -W -i 127.0.0.1 -p 7682 -b /onboard /usr/local/bin/sirenorelay-onboard.sh &
+onboard_pid=$!
 
 if [[ "$(jq -r '.lan_tls_enabled // false' /data/options.json 2>/dev/null || echo false)" == true ]]; then
   certificate="$(jq -r '.tls_certificate // empty' /data/options.json)"
@@ -53,8 +55,8 @@ nginx -c /etc/nginx/sirenorelay-ingress.conf -g 'daemon off;' &
 nginx_pid=$!
 
 cleanup() {
-  kill "$sync_pid" "$relay_pid" "$bridge_pid" "$terminal_pid" "$nginx_pid" 2>/dev/null || true
-  wait "$sync_pid" "$relay_pid" "$bridge_pid" "$terminal_pid" "$nginx_pid" 2>/dev/null || true
+  kill "$sync_pid" "$relay_pid" "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid" 2>/dev/null || true
+  wait "$sync_pid" "$relay_pid" "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid" 2>/dev/null || true
 }
 trap cleanup EXIT
-wait -n "$bridge_pid" "$terminal_pid" "$nginx_pid"
+wait -n "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid"

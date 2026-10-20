@@ -67,6 +67,35 @@ def write_config(yaml_text: str) -> None:
     print("Applied Configuration-tab YAML.")
 
 
+def publish_current_config() -> None:
+    """Copy onboarding's generated YAML into the native Configuration tab."""
+    if not CONFIG.exists():
+        raise SystemExit("Onboarding did not create config.yml.")
+    token = os.environ.get("SUPERVISOR_TOKEN")
+    if not token:
+        raise SystemExit("SUPERVISOR_TOKEN is unavailable; cannot update Configuration-tab YAML.")
+    options = json.loads(OPTIONS.read_text(encoding="utf-8"))
+    options["config_yaml"] = CONFIG.read_text(encoding="utf-8")
+    result = subprocess.run(
+        [
+            "curl", "--fail-with-body", "--silent", "--show-error",
+            "-X", "POST", "http://supervisor/addons/self/options",
+            "-H", f"Authorization: Bearer {token}",
+            "-H", "Content-Type: application/json",
+            "--data-binary", json.dumps({"options": options}),
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode:
+        raise SystemExit(result.stderr or result.stdout)
+    LAST_TAB_HASH.write_text(digest(CONFIG.read_bytes()), encoding="utf-8")
+    os.chmod(LAST_TAB_HASH, 0o600)
+    os.chown(LAST_TAB_HASH, RELAY_UID, RELAY_GID)
+    print("Copied generated config.yml into the Configuration tab.")
+
+
 def sync(previous: str | None) -> str:
     yaml_text = read_options()
     if not yaml_text.strip() or yaml_text == previous:
@@ -84,6 +113,11 @@ def sync(previous: str | None) -> str:
 
 
 def main() -> None:
+    if len(sys.argv) == 2 and sys.argv[1] == "--publish-current":
+        publish_current_config()
+        return
+    if len(sys.argv) != 1:
+        raise SystemExit("Usage: config-sync.py [--publish-current]")
     DATA.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.chown(DATA, RELAY_UID, RELAY_GID)
     previous: str | None = None
