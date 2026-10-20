@@ -6,6 +6,7 @@ on:
     paths: [sirenorelay/**]
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -38,3 +39,4 @@ jobs:
           git commit -m "chore: release ${version}"
           git push origin HEAD:main
           gh release create "v${version}" --title "SirenoRELAY add-on ${version}" --notes "Publishes the SirenoRELAY Home Assistant add-on."
+          gh workflow run publish-image.yml --ref main -f "version=${version}"
