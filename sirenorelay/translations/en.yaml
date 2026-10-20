@@ -1,0 +1,13 @@
+configuration:
+  config_yaml:
+    name: SirenoRELAY configuration
+    description: Edit the generated config.yml after first-time setup. Saving restarts the app and applies this YAML.
+  lan_tls_enabled:
+    name: Enable LAN TLS
+    description: Expose the MCP endpoint only over HTTPS on the assigned port.
+  tls_certificate:
+    name: TLS certificate file
+    description: Certificate file name in Home Assistant's ssl folder.
+  tls_key:
+    name: TLS private key file
+    description: Private-key file name in Home Assistant's ssl folder.
