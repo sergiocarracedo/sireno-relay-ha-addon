@@ -3,9 +3,9 @@ set -euo pipefail
 
 CONFIG=/data/sirenorelay/.config/sirenorelay/config.yml
 RUN_DIR=/run/sirenorelay
-mkdir -p "$RUN_DIR" /data/nginx /data/sirenorelay
+mkdir -p "$RUN_DIR" /run/nginx /data/sirenorelay
 chown -R sirenorelay:sirenorelay /data/sirenorelay
-chown -R www-data:www-data /data/nginx
+chown -R www-data:www-data /run/nginx
 
 python3 /usr/local/bin/config-sync.py &
 sync_pid=$!
