@@ -7,16 +7,18 @@ FROM debian:bookworm-slim
 
 ARG BUILD_VERSION
 ARG BUILD_ARCH
+ARG TARGETARCH
 ARG SIRENORELAY_VERSION
 ARG HIMALAYA_VERSION
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y ca-certificates curl jq nginx python3 socat util-linux \
     && rm -rf /var/lib/apt/lists/* \
-    && case "$BUILD_ARCH" in \
+    && arch="${BUILD_ARCH:-$TARGETARCH}" \
+    && case "$arch" in \
       amd64) sireno_arch=amd64; himalaya_arch=x86_64; ttyd_arch=x86_64 ;; \
-      aarch64) sireno_arch=arm64; himalaya_arch=aarch64; ttyd_arch=aarch64 ;; \
-      *) echo "Unsupported architecture: $BUILD_ARCH" >&2; exit 1 ;; \
+      aarch64|arm64) sireno_arch=arm64; himalaya_arch=aarch64; ttyd_arch=aarch64 ;; \
+      *) echo "Unsupported architecture: $arch" >&2; exit 1 ;; \
     esac \
     && curl -fsSL "https://github.com/sergiocarracedo/sireno-relay/releases/download/v${SIRENORELAY_VERSION}/sirenorelay_${SIRENORELAY_VERSION}_linux_${sireno_arch}.tar.gz" -o /tmp/sirenorelay.tgz \
     && tar -xzf /tmp/sirenorelay.tgz -C /usr/local/bin sirenorelay \
