@@ -1,6 +1,9 @@
 # Changelog
 
-## 2026.10.20-6
+## 2026.10.20-7
+
+- Publish add-on changes.
+
 
 - Publish add-on changes.
 
