@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SirenoRELAY</title>
+    <link rel="stylesheet" href="./app.css">
+    <script src="./vs/loader.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header><img src="./logo.png" alt=""><div><p class="eyebrow">SIRENORELAY / HOME ASSISTANT</p><h1>Mail, on your terms.</h1></div><span id="state" class="state">Checking</span></header>
+      <section id="onboarding" class="onboarding" hidden><div class="copy"><p class="eyebrow">FIRST-TIME SETUP</p><h2>Connect your inbox</h2><p>Complete the guided setup below. When it succeeds, this page automatically switches to your configuration editor.</p></div><iframe src="./onboard/" title="SirenoRELAY first-time setup"></iframe></section>
+      <section id="workspace" hidden><div class="workspace-head"><div><p class="eyebrow">CONFIGURATION</p><h2>config.yml</h2></div><button id="save" type="button">Save configuration</button></div><div id="editor" aria-label="config.yml editor"></div><p id="message" role="status"></p></section>
+      <details id="network" hidden><summary>LAN access <span>Optional HTTPS endpoint</span></summary><div class="network-grid"><label class="toggle"><input id="lan-tls" type="checkbox"><span>Enable HTTPS access on port 8443</span></label><label>Certificate file <input id="certificate" autocomplete="off" spellcheck="false"></label><label>Private-key file <input id="key" autocomplete="off" spellcheck="false"></label><button id="save-network" type="button" class="quiet">Save LAN settings</button></div></details>
+      <footer><a href="./terminal/">Open diagnostics terminal</a><span>Saved configuration is validated before it is applied.</span></footer>
+    </main>
+  </body>
+</html>

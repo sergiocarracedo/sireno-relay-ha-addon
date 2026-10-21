@@ -2,13 +2,14 @@
 set -euo pipefail
 
 CONFIG=/data/sirenorelay/.config/sirenorelay/config.yml
+SETTINGS=/data/sirenorelay/ui-settings.json
 RUN_DIR=/run/sirenorelay
 mkdir -p "$RUN_DIR" /run/nginx /data/sirenorelay
 chown -R sirenorelay:sirenorelay /data/sirenorelay
 chown -R www-data:www-data /run/nginx
 
-python3 /usr/local/bin/config-sync.py &
-sync_pid=$!
+python3 /usr/local/bin/web.py &
+web_pid=$!
 
 run_relay() {
   while true; do
@@ -16,7 +17,7 @@ run_relay() {
       runuser -u sirenorelay -- env HOME=/data/sirenorelay XDG_CONFIG_HOME=/data/sirenorelay/.config \
         sirenorelay serve --config "$CONFIG" || true
     else
-      echo "Waiting for onboarding or Configuration-tab YAML."
+      echo "Waiting for first-time onboarding."
     fi
     sleep 2
   done
@@ -34,9 +35,9 @@ terminal_pid=$!
 ttyd -W -i 127.0.0.1 -p 7682 -b /onboard /usr/local/bin/sirenorelay-onboard.sh &
 onboard_pid=$!
 
-if [[ "$(jq -r '.lan_tls_enabled // false' /data/options.json 2>/dev/null || echo false)" == true ]]; then
-  certificate="$(jq -r '.tls_certificate // empty' /data/options.json)"
-  key="$(jq -r '.tls_key // empty' /data/options.json)"
+if [[ "$(jq -r '.lan_tls_enabled // false' "$SETTINGS" 2>/dev/null || echo false)" == true ]]; then
+  certificate="$(jq -r '.tls_certificate // empty' "$SETTINGS")"
+  key="$(jq -r '.tls_key // empty' "$SETTINGS")"
   if [[ "$certificate" =~ ^[A-Za-z0-9._-]+$ && "$key" =~ ^[A-Za-z0-9._-]+$ && -r "/ssl/$certificate" && -r "/ssl/$key" ]]; then
     cat > "$RUN_DIR/tls.conf" <<EOF
 server {
@@ -55,8 +56,8 @@ nginx -c /etc/nginx/sirenorelay-ingress.conf -g 'daemon off;' &
 nginx_pid=$!
 
 cleanup() {
-  kill "$sync_pid" "$relay_pid" "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid" 2>/dev/null || true
-  wait "$sync_pid" "$relay_pid" "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid" 2>/dev/null || true
+  kill "$web_pid" "$relay_pid" "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid" 2>/dev/null || true
+  wait "$web_pid" "$relay_pid" "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid" 2>/dev/null || true
 }
 trap cleanup EXIT
-wait -n "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid"
+wait -n "$web_pid" "$bridge_pid" "$terminal_pid" "$onboard_pid" "$nginx_pid"

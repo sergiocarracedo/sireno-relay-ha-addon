@@ -10,8 +10,7 @@ fi
 sirenorelay onboard
 status=$?
 if [[ $status -eq 0 ]]; then
-  python3 /usr/local/bin/config-sync.py --publish-current \
-    || echo "Unable to copy config.yml into the Configuration tab. Copy it manually before changing Configuration-tab settings."
+  echo "Configuration created. Return to the SirenoRELAY page to edit it in the YAML editor."
 fi
 
 echo

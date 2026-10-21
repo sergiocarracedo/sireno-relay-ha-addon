@@ -7,11 +7,11 @@ Run [SirenoRELAY](https://github.com/sergiocarracedo/sireno-relay) as a Home Ass
 1. Open **Settings → Add-ons → Add-on Store** in Home Assistant.
 2. Add `https://github.com/sergiocarracedo/sireno-relay-ha-addon` under **Repositories**.
 3. Install **SirenoRELAY** and start it.
-4. Select **Open Web UI**, then choose **Run first-time setup**.
-5. Complete the interactive IMAP/SMTP setup. Its generated YAML is automatically copied into the add-on’s **Configuration** tab.
-6. Use that tab’s `config_yaml` editor for all later configuration changes.
+4. Select **Open Web UI**. On first run, the guided terminal appears embedded in the page.
+5. Complete the interactive IMAP/SMTP setup. The page then switches automatically to a Monaco editor for `config.yml`.
+6. Save future configuration edits directly from that editor.
 
-The Configuration tab is authoritative after this import. It persists the YAML at `/data/sirenorelay/.config/sirenorelay/config.yml`; onboarding secrets live beside it in `/data/sirenorelay/.config/sirenorelay/secrets/`. Home Assistant includes `/data` in add-on backups. Audit logs are intentionally not retained in that backed-up directory.
+The ingress editor is authoritative. It persists YAML at `/data/sirenorelay/.config/sirenorelay/config.yml`; onboarding secrets live beside it in `/data/sirenorelay/.config/sirenorelay/secrets/`. Home Assistant includes `/data` in app backups. Audit logs are intentionally not retained in that backed-up directory.
 
 ## Connect another Home Assistant add-on
 
@@ -28,7 +28,7 @@ Give each agent its own bearer token. Do not mount this add-on’s data director
 LAN access is disabled by default. To enable it:
 
 1. Put a certificate and private key in Home Assistant’s `ssl` directory.
-2. Set **Enable LAN TLS** and the certificate/key file names in the Configuration tab.
+2. Expand **LAN access** in the app’s Web UI and set the certificate/key file names.
 3. Assign a host port to the add-on’s `8443/tcp` port in the Network settings.
 
 The add-on refuses to start the LAN endpoint unless both TLS files exist. The endpoint is HTTPS only. Keep bearer tokens out of unencrypted connections.
@@ -37,7 +37,7 @@ The add-on refuses to start the LAN endpoint unless both TLS files exist. The en
 
 The ingress terminal runs as the dedicated `sirenorelay` account. It is intended for onboarding, `config-check`, policy checks, and `sirenorelay user token rotate`.
 
-After a token rotation, copy the updated `config.yml` into the Configuration tab before saving any tab changes. The add-on detects a stale tab value and refuses to overwrite a config changed outside the tab.
+After a token rotation, reload the app’s Web UI before editing so the Monaco editor reads the updated `config.yml`.
 
 ## Development
 

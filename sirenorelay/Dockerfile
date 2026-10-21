@@ -3,6 +3,10 @@ ARG BUILD_ARCH
 ARG SIRENORELAY_VERSION=1.2.0
 ARG HIMALAYA_VERSION=2.2.1
 
+FROM node:22-bookworm-slim AS monaco
+
+RUN npm install --prefix /opt/monaco monaco-editor@0.55.1
+
 FROM debian:bookworm-slim
 
 ARG BUILD_VERSION
@@ -12,7 +16,7 @@ ARG SIRENORELAY_VERSION
 ARG HIMALAYA_VERSION
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y ca-certificates curl jq nginx python3 socat util-linux \
+    && apt-get install --no-install-recommends -y ca-certificates curl jq nginx procps python3 socat util-linux \
     && rm -rf /var/lib/apt/lists/* \
     && arch="${BUILD_ARCH:-$TARGETARCH}" \
     && case "$arch" in \
@@ -33,8 +37,11 @@ RUN apt-get update \
     && sirenorelay version \
     && himalaya --version
 
-COPY addon-run.sh config-sync.py sirenorelay-terminal.sh sirenorelay-onboard.sh /usr/local/bin/
+COPY addon-run.sh sirenorelay-terminal.sh sirenorelay-onboard.sh web.py /usr/local/bin/
 COPY ingress.conf /etc/nginx/sirenorelay-ingress.conf
+COPY web /usr/share/sirenorelay-web/
+COPY logo.png /usr/share/sirenorelay-web/logo.png
+COPY --from=monaco /opt/monaco/node_modules/monaco-editor/min/vs /usr/share/sirenorelay-web/vs/
 RUN chmod +x /usr/local/bin/addon-run.sh /usr/local/bin/sirenorelay-terminal.sh /usr/local/bin/sirenorelay-onboard.sh
 
 LABEL io.hass.version="${BUILD_VERSION}" \

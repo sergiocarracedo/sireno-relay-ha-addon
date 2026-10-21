@@ -27,13 +27,4 @@ map:
   - type: ssl
     path: /ssl
     read_only: true
-options:
-  config_yaml: ""
-  lan_tls_enabled: false
-  tls_certificate: fullchain.pem
-  tls_key: privkey.pem
-schema:
-  config_yaml: str
-  lan_tls_enabled: bool
-  tls_certificate: str
-  tls_key: str
+schema: false
