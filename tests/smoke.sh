@@ -17,7 +17,7 @@ for attempt in {1..20}; do
 done
 
 docker exec "$name" sh -c 'test "$(id -u sirenorelay)" = 10001 && command -v sirenorelay && command -v himalaya && command -v socat && command -v ttyd'
-docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8099/ -o /tmp/ingress.html && grep -Fq "Mail, on your terms." /tmp/ingress.html'
+docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8099/ -o /tmp/ingress.html && grep -Fq "Mail, on your terms." /tmp/ingress.html && grep -Fq "Configure manually" /tmp/ingress.html'
 docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8099/terminal/ -o /tmp/terminal.html && grep -Fq ttyd /tmp/terminal.html'
 docker exec "$name" sh -c 'grep -Fq "FIRST-TIME SETUP" /tmp/ingress.html && curl -fsS http://127.0.0.1:8099/onboard/ -o /tmp/onboard.html && grep -Fq ttyd /tmp/onboard.html && test -f /usr/share/sirenorelay-web/vs/loader.js'
 docker exec "$name" sh -c '! ss -ltn | grep -q ":8443"'

@@ -1,7 +1,7 @@
 name: SirenoRELAY
 version: "2026.10.21-1"
 slug: sirenorelay
-description: Policy-filtered MCP email relay for Home Assistant agents
+description: Policy-filtered MCP email relay. Configure it from the Web UI.
 url: https://github.com/sergiocarracedo/sireno-relay-ha-addon
 image: ghcr.io/sergiocarracedo/sireno-relay-ha-addon
 arch:

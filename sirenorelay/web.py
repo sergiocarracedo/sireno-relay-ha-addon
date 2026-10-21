@@ -83,9 +83,10 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/api/status":
+            config = CONFIG.read_text(encoding="utf-8") if CONFIG.exists() else ""
             self.send_json(HTTPStatus.OK, {
-                "configured": CONFIG.exists(),
-                "config": CONFIG.read_text(encoding="utf-8") if CONFIG.exists() else "",
+                "configured": bool(config.strip()),
+                "config": config,
                 "settings": read_settings(),
             })
             return

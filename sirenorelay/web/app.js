@@ -1,4 +1,5 @@
 let editor;
+let refreshTimer;
 const $ = (selector) => document.querySelector(selector);
 
 function notice(message, error = false) {
@@ -18,9 +19,9 @@ function showEditor(status) {
   $("#onboarding").hidden = true;
   $("#workspace").hidden = false;
   $("#network").hidden = false;
-  $("#state").textContent = "Protected";
+  $("#state").textContent = status.configured ? "Protected" : "Manual configuration";
   $("#state").classList.add("ready");
-  editor.setValue(status.config);
+  editor.setValue(status.config || "");
   $("#lan-tls").checked = status.settings.lan_tls_enabled;
   $("#certificate").value = status.settings.tls_certificate;
   $("#key").value = status.settings.tls_key;
@@ -32,8 +33,18 @@ async function refresh() {
   else {
     $("#onboarding").hidden = false;
     $("#state").textContent = "Setup required";
-    setTimeout(refresh, 3000);
+    refreshTimer = setTimeout(refresh, 1000);
   }
+}
+
+function configureManually() {
+  clearTimeout(refreshTimer);
+  showEditor({
+    configured: false,
+    config: "",
+    settings: { lan_tls_enabled: false, tls_certificate: "fullchain.pem", tls_key: "privkey.pem" },
+  });
+  notice("Paste a complete config.yml, then save it.");
 }
 
 window.require.config({ paths: { vs: "./vs" } });
@@ -51,6 +62,8 @@ $("#save").addEventListener("click", async () => {
   catch (error) { notice(error.message, true); }
   finally { $("#save").disabled = false; }
 });
+
+$("#skip-onboarding").addEventListener("click", configureManually);
 
 $("#save-network").addEventListener("click", async () => {
   try {
