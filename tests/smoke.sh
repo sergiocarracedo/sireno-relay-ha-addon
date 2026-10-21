@@ -3,7 +3,7 @@ set -euo pipefail
 
 name="sirenorelay-ha-smoke-$$"
 volume="sirenorelay-ha-smoke-data-$$"
-config_file="$(mktemp /tmp/opencode/sirenorelay-config.XXXXXX)"
+config_file="$(mktemp "${TMPDIR:-/tmp}/sirenorelay-config.XXXXXX")"
 trap 'docker rm -f "$name" >/dev/null 2>&1 || true; docker volume rm -f "$volume" >/dev/null 2>&1 || true; rm -f "$config_file"' EXIT
 
 docker volume create "$volume" >/dev/null
