@@ -1,5 +1,5 @@
 name: SirenoRELAY
-version: "2026.10.21-1"
+version: "2026.10.21-2"
 slug: sirenorelay
 description: Policy-filtered MCP email relay. Configure it from the Web UI.
 url: https://github.com/sergiocarracedo/sireno-relay-ha-addon
@@ -20,11 +20,14 @@ panel_icon: mdi:email-lock-outline
 ports:
   8443/tcp: null
 ports_description:
-  8443/tcp: HTTPS MCP endpoint for trusted LAN clients (requires TLS options)
+  8443/tcp: Enable LAN access — enable access outside Home Assistant. Requires HTTPS configuration in the Web UI.
 map:
   - type: data
     path: /data
   - type: ssl
     path: /ssl
     read_only: true
-schema: false
+options:
+  mcp_port: 8081
+schema:
+  mcp_port: int

@@ -1,6 +1,6 @@
 ARG BUILD_VERSION
 ARG BUILD_ARCH
-ARG SIRENORELAY_VERSION=1.2.0
+ARG SIRENORELAY_VERSION=1.5.0
 ARG HIMALAYA_VERSION=2.2.1
 
 FROM node:22-bookworm-slim AS monaco
@@ -15,8 +15,10 @@ ARG TARGETARCH
 ARG SIRENORELAY_VERSION
 ARG HIMALAYA_VERSION
 
+ENV SIRENORELAY_ADDON_VERSION=${BUILD_VERSION}
+
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y ca-certificates curl jq nginx procps python3 socat util-linux \
+    && apt-get install --no-install-recommends -y ca-certificates curl jq nginx poppler-utils procps python3 util-linux \
     && rm -rf /var/lib/apt/lists/* \
     && arch="${BUILD_ARCH:-$TARGETARCH}" \
     && case "$arch" in \

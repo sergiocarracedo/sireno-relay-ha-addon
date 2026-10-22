@@ -37,6 +37,16 @@ The add-on refuses to start the LAN endpoint unless both TLS files exist. The en
 
 The ingress terminal runs as the dedicated `sirenorelay` account. It is intended for onboarding, `config-check`, policy checks, and `sirenorelay user token rotate`.
 
+## MCP bridge port
+
+The App configuration includes `mcp_port` (default `8081`) for the authenticated bridge used by other Home Assistant Apps. Restart SirenoRELAY after changing it, then use the port shown in the Web UI header.
+
+When Supervisor reports this App's internal hostname, SirenoRELAY automatically
+uses `http://<app-hostname>:<mcp_port>` for one-minute attachment download links
+returned by `read_attachment`. This endpoint remains internal to Home Assistant;
+it does not enable LAN access. An explicit `attachments.base_url` in `config.yml`
+takes precedence if an operator needs a different reachable origin.
+
 After a token rotation, reload the app’s Web UI before editing so the Monaco editor reads the updated `config.yml`.
 
 ## Development

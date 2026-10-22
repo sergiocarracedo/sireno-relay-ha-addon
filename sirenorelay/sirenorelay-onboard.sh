@@ -7,7 +7,7 @@ if [[ -f "$config" ]]; then
   exec bash -l
 fi
 
-sirenorelay onboard
+runuser -u sirenorelay -- env HOME=/data/sirenorelay XDG_CONFIG_HOME=/data/sirenorelay/.config sirenorelay onboard
 status=$?
 if [[ $status -eq 0 ]]; then
   echo "Configuration created. Return to the SirenoRELAY page to edit it in the YAML editor."
