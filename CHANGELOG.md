@@ -2,6 +2,9 @@
 
 ## 2026.10.21-1
 
+- Update SirenoRELAY to [v1.3.1](https://github.com/sergiocarracedo/sireno-relay/releases/tag/v1.3.1).
+
+
 - Publish add-on changes.
 
 
