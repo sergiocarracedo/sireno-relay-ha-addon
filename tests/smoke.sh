@@ -7,6 +7,7 @@ config_file="$(mktemp "${TMPDIR:-/tmp}/sirenorelay-config.XXXXXX")"
 trap 'docker rm -f "$name" >/dev/null 2>&1 || true; docker volume rm -f "$volume" >/dev/null 2>&1 || true; rm -f "$config_file"' EXIT
 
 docker volume create "$volume" >/dev/null
+docker run --rm --entrypoint sh -v "$volume:/data" sirenorelay-ha-addon:test -c 'printf "{\"mcp_port\":18081}\n" > /data/options.json'
 docker run -d --rm --name "$name" -v "$volume:/data" sirenorelay-ha-addon:test >/dev/null
 
 for attempt in {1..20}; do
@@ -16,8 +17,9 @@ for attempt in {1..20}; do
   sleep 1
 done
 
-docker exec "$name" sh -c 'test "$(id -u sirenorelay)" = 10001 && command -v sirenorelay && command -v himalaya && command -v socat && command -v ttyd'
-docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8099/ -o /tmp/ingress.html && grep -Fq "Mail, on your terms." /tmp/ingress.html'
+docker exec "$name" sh -c 'test "$(id -u sirenorelay)" = 10001 && command -v sirenorelay && command -v himalaya && command -v nginx && command -v ttyd'
+docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8098/api/status | jq -e ".settings.mcp_port == 18081" >/dev/null && ss -ltn | grep -q ":18081"'
+docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8099/ -o /tmp/ingress.html && grep -Fq "Mail, on your terms." /tmp/ingress.html && grep -Fq "Skip onboarding" /tmp/ingress.html && grep -Fq "Add user" /tmp/ingress.html && grep -Fq "Check configuration" /tmp/ingress.html && grep -Fq "Check policy" /tmp/ingress.html'
 docker exec "$name" sh -c 'curl -fsS http://127.0.0.1:8099/terminal/ -o /tmp/terminal.html && grep -Fq ttyd /tmp/terminal.html'
 docker exec "$name" sh -c 'grep -Fq "FIRST-TIME SETUP" /tmp/ingress.html && curl -fsS http://127.0.0.1:8099/onboard/ -o /tmp/onboard.html && grep -Fq ttyd /tmp/onboard.html && test -f /usr/share/sirenorelay-web/vs/loader.js'
 docker exec "$name" sh -c '! ss -ltn | grep -q ":8443"'
@@ -37,6 +39,7 @@ listen: {mcp: "127.0.0.1:8080"}
 EOF
 docker cp "$config_file" "$name:/tmp/config.json"
 docker exec "$name" sh -c 'curl -fsS -X PUT http://127.0.0.1:8098/api/config -H "Content-Type: application/json" --data-binary @/tmp/config.json | grep -Fq "Saved and restarted"'
+docker exec "$name" sh -c 'curl -fsS -X POST http://127.0.0.1:8098/api/config/check -H "Content-Type: application/json" --data-binary @/tmp/config.json | grep -Fq "Configuration is valid"'
 for attempt in {1..10}; do
   if docker exec "$name" sh -c 'test -f /data/sirenorelay/.config/sirenorelay/config.yml && test "$(stat -c %a /data/sirenorelay/.config/sirenorelay/config.yml)" = 600 && test "$(stat -c %u /data/sirenorelay/.config/sirenorelay/config.yml)" = 10001'; then
     break
@@ -44,5 +47,12 @@ for attempt in {1..10}; do
   sleep 1
 done
 docker exec "$name" sh -c 'test "$(stat -c %a /data/sirenorelay/.config/sirenorelay/config.yml)" = 600'
+for attempt in {1..10}; do
+  if docker exec "$name" sh -c 'curl -sS -o /tmp/mcp-response -w "%{http_code}" -X POST http://127.0.0.1:18081/mcp -H "Host: local-sirenorelay:18081" -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" --data "{}" | grep -qx "401" && ! grep -Fq "invalid Host header" /tmp/mcp-response'; then
+    break
+  fi
+  sleep 1
+done
+docker exec "$name" sh -c 'status=$(curl -sS -o /tmp/mcp-response -w "%{http_code}" -X POST http://127.0.0.1:18081/mcp -H "Host: local-sirenorelay:18081" -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" --data "{}"); test "$status" = 401 && ! grep -Fq "invalid Host header" /tmp/mcp-response'
 
 echo "SirenoRELAY Home Assistant add-on smoke test: OK"

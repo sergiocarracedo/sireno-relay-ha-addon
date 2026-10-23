@@ -15,8 +15,10 @@ ARG TARGETARCH
 ARG SIRENORELAY_VERSION
 ARG HIMALAYA_VERSION
 
+ENV SIRENORELAY_ADDON_VERSION=${BUILD_VERSION}
+
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y ca-certificates curl jq nginx procps python3 socat util-linux \
+    && apt-get install --no-install-recommends -y ca-certificates curl jq nginx poppler-utils procps python3 util-linux \
     && rm -rf /var/lib/apt/lists/* \
     && arch="${BUILD_ARCH:-$TARGETARCH}" \
     && case "$arch" in \

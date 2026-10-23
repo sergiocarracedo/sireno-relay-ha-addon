@@ -13,9 +13,13 @@ from pathlib import Path
 DATA = Path("/data/sirenorelay")
 CONFIG = DATA / ".config/sirenorelay/config.yml"
 SETTINGS = DATA / "ui-settings.json"
+OPTIONS = Path("/data/options.json")
 WEB_ROOT = Path("/usr/share/sirenorelay-web")
 UID = GID = 10001
 SAFE_FILENAME = re.compile(r"^[A-Za-z0-9._-]+$")
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+APP_VERSION = os.getenv("SIRENORELAY_ADDON_VERSION", "development")
+APP_HOSTNAME = os.getenv("SIRENORELAY_APP_HOSTNAME", "")
 
 
 def read_settings():
@@ -23,8 +27,16 @@ def read_settings():
     try:
         saved = json.loads(SETTINGS.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return defaults
-    return {**defaults, **{key: saved[key] for key in defaults if key in saved}}
+        saved = {}
+    return {**defaults, **{key: saved[key] for key in defaults if key in saved}, "mcp_port": read_mcp_port()}
+
+
+def read_mcp_port():
+    try:
+        value = json.loads(OPTIONS.read_text(encoding="utf-8")).get("mcp_port", 8081)
+    except (OSError, json.JSONDecodeError):
+        return 8081
+    return value if isinstance(value, int) and 1 <= value <= 65535 else 8081
 
 
 def atomic_write(path: Path, content: bytes, mode: int, owner: bool = False):
@@ -61,6 +73,19 @@ def validate_config(value: str):
     return candidate
 
 
+def command_output(args):
+    result = subprocess.run(
+        ["runuser", "-u", "sirenorelay", "--", "sirenorelay", *args],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    output = ANSI_ESCAPE.sub("", (result.stdout or result.stderr)).strip()
+    if result.returncode:
+        raise ValueError(output or "Command failed")
+    return output
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(WEB_ROOT), **kwargs)
@@ -83,10 +108,14 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/api/status":
+            config = CONFIG.read_text(encoding="utf-8") if CONFIG.exists() else ""
             self.send_json(HTTPStatus.OK, {
-                "configured": CONFIG.exists(),
-                "config": CONFIG.read_text(encoding="utf-8") if CONFIG.exists() else "",
+                "configured": bool(config.strip()),
+                "config": config,
                 "settings": read_settings(),
+                "version": APP_VERSION,
+                "hostname": APP_HOSTNAME,
+                "attachment_base_url": os.getenv("SIRENORELAY_ATTACHMENT_BASE_URL", ""),
             })
             return
         super().do_GET()
@@ -107,6 +136,35 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json(HTTPStatus.BAD_REQUEST, {"message": str(error)})
 
     def do_POST(self):
+        if self.path == "/api/config/check":
+            try:
+                value = self.body()["config"]
+                if not isinstance(value, str) or not value.strip():
+                    raise ValueError("config.yml cannot be empty")
+                candidate = validate_config(value)
+                candidate.unlink(missing_ok=True)
+                self.send_json(HTTPStatus.OK, {"message": "Configuration is valid."})
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+                self.send_json(HTTPStatus.BAD_REQUEST, {"message": str(error)})
+            return
+        if self.path == "/api/policy-check":
+            candidate = None
+            try:
+                value = self.body()
+                config, user, folder = value["config"], value["user"], value["folder"]
+                if not isinstance(config, str) or not config.strip():
+                    raise ValueError("config.yml cannot be empty")
+                if not all(isinstance(item, str) and item.strip() for item in (user, folder)):
+                    raise ValueError("Agent user and mailbox folder are required")
+                candidate = validate_config(config)
+                output = command_output(["policy-check", "--config", str(candidate), "--user", user, "--folder", folder])
+                self.send_json(HTTPStatus.OK, {"message": output or "Policy check passed."})
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+                self.send_json(HTTPStatus.BAD_REQUEST, {"message": str(error)})
+            finally:
+                if candidate:
+                    candidate.unlink(missing_ok=True)
+            return
         if self.path != "/api/settings":
             self.send_error(HTTPStatus.NOT_FOUND)
             return
