@@ -1,5 +1,5 @@
 name: SirenoRELAY
-version: "2026.10.23-2"
+version: "2026.10.23-1"
 slug: sirenorelay
 description: Policy-filtered MCP email relay. Configure it from the Web UI.
 url: https://github.com/sergiocarracedo/sireno-relay-ha-addon
