@@ -1,6 +1,9 @@
 # Changelog
 
-## 2026.10.24-1
+## 2026.10.26-1
+
+- Update SirenoRELAY to [v1.7.0](https://github.com/sergiocarracedo/sireno-relay/releases/tag/v1.7.0).
+
 
 - Update SirenoRELAY to [v1.6.3](https://github.com/sergiocarracedo/sireno-relay/releases/tag/v1.6.3).
 
